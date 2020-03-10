@@ -1,6 +1,8 @@
-ï»¿// Intersect.cpp : æ­¤æ–‡ä»¶åŒ…å« "main" å‡½æ•°ã€‚ç¨‹åºæ‰§è¡Œå°†åœ¨æ­¤å¤„å¼€å§‹å¹¶ç»“æŸã€‚
+// Intersect.cpp : ´ËÎÄ¼ş°üº¬ "main" º¯Êı¡£³ÌĞòÖ´ĞĞ½«ÔÚ´Ë´¦¿ªÊ¼²¢½áÊø¡£
 #pragma warning(disable: 4996)
+#pragma once
 
+#include "Intersect.h"
 #include "pch.h"
 #include <iostream>
 #include <cstdio>
@@ -8,19 +10,41 @@
 #include <set>
 #include <algorithm>
 #include <vector>
+#include <unordered_set>
 using namespace std;
 
 typedef pair<double, double> point;
 
+struct HashComparator
+{
+	bool operator()(const point &k1, const point &k2) const noexcept
+	{
+		/*if (fabs(k1.first - k2.first) < 1e-8 && fabs(k1.second - k2.second) < 1e-8) {
+			return true;
+		}
+		return false;*/
+		return k1 == k2;
+	}
+};
+
+struct HashHasher
+{
+	size_t operator()(const point &k) const noexcept
+	{
+		//return hash<int>{}(k.key);
+		return hash<double>{}(k.first + k.second);
+	}
+};
+
 struct line {
-	int a;
-	int b;
-	int c;
+	double a;
+	double b;
+	double c;
 };
 struct circle {
-	int x;
-	int y;
-	int r;
+	double x;
+	double y;
+	double r;
 };
 
 class Image {
@@ -32,7 +56,8 @@ public:
 
 private:
 	int pointNum;
-	set <point> points;
+	//set <point> points;
+	unordered_set<point, HashHasher, HashComparator> points;
 	vector <line> lines;
 	vector <circle> circles;
 	void getLineAndLinePoint();
@@ -44,46 +69,47 @@ Image::Image() {
 	pointNum = 0;
 }
 
+
 void Image::addLine(int x1, int y1, int x2, int y2) {
 	line cur;
-	cur.a = y1 - y2;
-	cur.b = x2 - x1;
-	cur.c = x1 * y2 - x2 * y1;
+	cur.a = (double)y1 - (double)y2;
+	cur.b = (double)x2 - (double)x1;
+	cur.c = (double)x1 * (double)y2 - (double)x2 * (double)y1;
 	lines.push_back(cur);
 }
 
 void Image::addCircle(int x, int y, int r) {
 	circle cur;
-	cur.x = x;
-	cur.y = y;
-	cur.r = r;
+	cur.x = (double)x;
+	cur.y = (double)y;
+	cur.r = (double)r;
 	circles.push_back(cur);
 }
 
 int Image::getNum() {
-	cout << "start" << endl;
+	//cout << "start" << endl;
 	this->getLineAndLinePoint();
-	cout << "stage1 complete\n" << endl;
+	//cout << "stage1 complete\n" << endl;
 	this->getLineAndCirclePoint();
-	cout << "stage2 complete\n" << endl;
+	//cout << "stage2 complete\n" << endl;
 	this->getCircleAndCirclePoint();
-	cout << "stage3 complete\n" << endl;
-	pointNum = points.size();
+	//cout << "stage3 complete\n" << endl;
+	pointNum = (int)points.size();
 	return pointNum;
 }
 
 void Image::getLineAndLinePoint() {
-	int linesLength = lines.size();
+	int linesLength = (int)lines.size();
 	for (int i = 0; i < linesLength; i++) {
 		for (int j = i + 1; j < linesLength; j++) {
 			line lineA, lineB;
 			lineA = lines[i];
 			lineB = lines[j];
 
-			
 
-			int judgeNum = lineA.a * lineB.b - lineA.b * lineB.a;
-			if (judgeNum == 0) {
+
+			double judgeNum = lineA.a * lineB.b - lineA.b * lineB.a;
+			if (fabs(judgeNum) < 1e-8) {
 				continue;
 			}
 			double x, y;
@@ -92,17 +118,19 @@ void Image::getLineAndLinePoint() {
 			//cout << x << " " << y << endl;
 			point cur(x, y);
 			points.insert(cur);
+
+
 		}
-		if (i % 100 == 0) {
-			cout << "stage complete 100 per" << endl;
-		}
-		
+		//if (i % 100 == 0) {
+		//	cout << "stage complete 100 per " << i << endl;
+		//}
+
 	}
 }
 
 void Image::getLineAndCirclePoint() {
-	int linesLength = lines.size();
-	int circlesLength = circles.size();
+	int linesLength = (int)lines.size();
+	int circlesLength = (int)circles.size();
 	for (int i = 0; i < linesLength; i++) {
 		for (int j = 0; j < circlesLength; j++) {
 			line curLine;
@@ -145,25 +173,25 @@ void Image::getLineAndCirclePoint() {
 				}
 			}
 		}
-		if (i % 100 == 0) {
-			cout << "stage complete 100 per" << endl;
-		}
+		//if (i % 100 == 0) {
+		//	cout << "stage complete 100 per" << endl;
+		//}
 	}
 }
 
 void Image::getCircleAndCirclePoint() {
-	int circleLength = circles.size();
+	int circleLength = (int)circles.size();
 	for (int i = 0; i < circleLength; i++) {
 		for (int j = i + 1; j < circleLength; j++) {
 			circle circleA, circleB;
 			circleA = circles[i];
 			circleB = circles[j];
 
-			if (circleA.r == circleB.r && circleA.x == circleB.x && circleA.y == circleB.y) {
-				continue;
-			}
+			//if (circleA.r == circleB.r && circleA.x == circleB.x && circleA.y == circleB.y) {
+			//	continue;
+			//}
 
-			int tmpA, tmpB, tmpC;
+			double tmpA, tmpB, tmpC;
 			tmpA = 2 * (circleB.x - circleA.x);
 			tmpB = 2 * (circleB.y - circleA.y);
 			tmpC = circleA.x * circleA.x + circleA.y * circleA.y - circleB.x * circleB.x - circleB.y * circleB.y + circleB.r * circleB.r - circleA.r * circleA.r;
@@ -209,9 +237,9 @@ void Image::getCircleAndCirclePoint() {
 				}
 			}
 		}
-		if (i % 100 == 0) {
-			cout << "stage complete 100 per" << endl;
-		}
+		//if (i % 100 == 0) {
+		//	cout << "stage complete 100 per" << endl;
+		//}
 	}
 }
 
@@ -228,8 +256,8 @@ int main(int argc, char * argv[])
 			//cout << argv[i + 1] << endl;
 		}
 	}
-	
-	Image img;
+
+	Image *img = new Image();
 	int n;
 	cin >> n;
 	for (int i = 0; i < n; i++) {
@@ -238,12 +266,12 @@ int main(int argc, char * argv[])
 		cin >> judgeLorC;
 		if (judgeLorC == 'L') {
 			cin >> num_1 >> num_2 >> num_3 >> num_4;
-			img.addLine(num_1, num_2, num_3, num_4);
+			img->addLine(num_1, num_2, num_3, num_4);
 		}
 		else if (judgeLorC == 'C') {
 			cin >> num_1 >> num_2 >> num_3;
-			img.addCircle(num_1, num_2, num_3);
+			img->addCircle(num_1, num_2, num_3);
 		}
 	}
-	printf("%d\n", img.getNum());
+	printf("%d\n", img->getNum());
 }
